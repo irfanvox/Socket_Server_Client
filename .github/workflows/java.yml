@@ -1,17 +1,31 @@
-name: C/C++ CI - Build Status
+name: Build Action
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - releases/*
+    paths-ignore:
+      - '**.md'
   pull_request:
-    branches: [ main ]
+    paths-ignore:
+      - '**.md'
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-    - uses: actions/checkout@v2
-    - name: make
-      run: make -C 3_Implementation/ all
+      - uses: actions/checkout@v2
+      - name: Setup Node.JS 16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run format-check
+      - run: npm test
